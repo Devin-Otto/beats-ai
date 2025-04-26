@@ -2,39 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>beats.ai Live Radio</title>
+    <title>beats.ai Radio</title>
     <style>
-        body {
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: sans-serif;
             background-color: #0f0f1a;
             color: white;
             text-align: center;
-            font-family: sans-serif;
         }
-        img {
-            margin-top: 20px;
-            border-radius: 8px;
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        #content {
+            position: relative;
+            z-index: 10;
+            padding-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>beats.ai Radio</h1>
+<canvas id="starfield"></canvas>
+
+<div id="content">
+    <h1 id="welcome-text">Loading...</h1>
     <h2 id="song-title">Loading current track...</h2>
     <img id="cover-art" src="" width="300"/>
     <br><br>
     <a href="/login" style="color: #1db954;">DJ Login</a>
+    <br><br>
+    <a href="/queue" style="color: #1db954;">View Playlist Queue</a>
+</div>
 
-    <script>
-        async function getNowPlaying() {
-            const res = await fetch('/nowplaying');
-            const data = await res.json();
-            if (!data.error) {
-                document.getElementById('song-title').innerText = `${data.title} – ${data.artist}`;
-                document.getElementById('cover-art').src = data.cover;
-            }
+<script src="/static/starfield.js"></script>
+<script>
+    async function getNowPlaying() {
+        const res = await fetch('/nowplaying');
+        const data = await res.json();
+        if (!data.error) {
+            document.getElementById('song-title').innerText = `${data.title} – ${data.artist}`;
+            document.getElementById('cover-art').src = data.cover;
         }
+    }
 
-        setInterval(getNowPlaying, 5000);
-        window.onload = getNowPlaying;
-    </script>
+    async function getWelcome() {
+        const res = await fetch('/me');
+        const data = await res.json();
+        if (data.display_name) {
+            document.getElementById('welcome-text').innerText = `Welcome, ${data.display_name}`;
+        } else {
+            document.getElementById('welcome-text').innerText = `Welcome to beats.ai`;
+        }
+    }
+
+    setInterval(getNowPlaying, 5000);
+    window.onload = function() {
+        getWelcome();
+        getNowPlaying();
+    };
+</script>
 </body>
 </html>
