@@ -1,4 +1,3 @@
-
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -7,6 +6,7 @@ let stars = [];
 let numStars = Math.floor(300 * phi); // ~485
 let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 let frequencyBands = [0, 0, 0, 0, 0];
+let hueShift = 0; // NEW: for smooth color drift
 
 // Web Audio API setup
 let audioCtx, analyser, dataArray;
@@ -65,9 +65,12 @@ function resizeCanvas() {
 }
 
 function drawStars() {
-    // Instead of full clear, draw transparent black rectangle for trails
+    // Trails - semi-transparent background
     ctx.fillStyle = "rgba(15, 15, 30, 0.3)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // NEW: Smooth hue drift over time
+    hueShift += 0.05 * phi;
 
     for (let star of stars) {
         const bandInfluence = frequencyBands[star.band] || 0;
@@ -82,12 +85,14 @@ function drawStars() {
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
 
+        const shiftedHue = (star.hue + hueShift) % 360; // NEW: shift each star's hue
+
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * phi);
-        gradient.addColorStop(0, `hsla(${star.hue}, 100%, 85%, ${star.opacity})`);
-        gradient.addColorStop(1, `hsla(${star.hue}, 100%, 50%, 0)`);
+        gradient.addColorStop(0, `hsla(${shiftedHue}, 100%, 85%, ${star.opacity})`);
+        gradient.addColorStop(1, `hsla(${shiftedHue}, 100%, 50%, 0)`);
 
         ctx.fillStyle = gradient;
-        ctx.shadowColor = `hsla(${star.hue}, 100%, 85%, ${bandInfluence})`;
+        ctx.shadowColor = `hsla(${shiftedHue}, 100%, 85%, ${bandInfluence})`;
         ctx.shadowBlur = size * 2 * bandInfluence * phi;
         ctx.fill();
     }
