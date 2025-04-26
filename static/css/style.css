@@ -64,3 +64,10 @@ main, .container, .content {
     border: none !important;
     box-shadow: none !important;
 }
+
+#content {
+    position: relative;
+    z-index: 10;
+    padding-top: 20px;
+    background: transparent !important; /* <-- Force it to be transparent */
+}
