@@ -66,7 +66,7 @@ function resizeCanvas() {
 
 function drawStars() {
     // Instead of full clear, draw transparent black rectangle for trails
-    ctx.fillStyle = "rgba(16, 6, 27, 0.15)";
+    ctx.fillStyle = "rgba(15, 15, 30, 0.3)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let star of stars) {
