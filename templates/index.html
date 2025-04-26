@@ -1,25 +1,40 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>beats.ai</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>beats.ai Live Radio</title>
+    <style>
+        body {
+            background-color: #0f0f1a;
+            color: white;
+            text-align: center;
+            font-family: sans-serif;
+        }
+        img {
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div class="nav">
-            <h1 class="logo">beats.ai</h1>
-            {% if not session.get('access_token') %}
-            <a href="/login" class="login-btn">Login with Spotify</a>
-            {% endif %}
-        </div>
-    </header>
+    <h1>beats.ai Radio</h1>
+    <h2 id="song-title">Loading current track...</h2>
+    <img id="cover-art" src="" width="300"/>
+    <br><br>
+    <a href="/login" style="color: #1db954;">DJ Login</a>
 
-    <main>
-        <canvas></canvas>
-    </main>
+    <script>
+        async function getNowPlaying() {
+            const res = await fetch('/nowplaying');
+            const data = await res.json();
+            if (!data.error) {
+                document.getElementById('song-title').innerText = `${data.title} – ${data.artist}`;
+                document.getElementById('cover-art').src = data.cover;
+            }
+        }
 
-    <script src="{{ url_for('static', filename='js/starfield.js') }}"></script>
+        setInterval(getNowPlaying, 5000);
+        window.onload = getNowPlaying;
+    </script>
 </body>
 </html>

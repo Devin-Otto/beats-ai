@@ -1,27 +1,12 @@
-
-import os
-from flask import Flask, render_template, redirect, request, session, jsonify
-import requests
+from flask import Flask, request, redirect, jsonify, render_template
+import requests, os
 from dotenv import load_dotenv
 
 load_dotenv()
-
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.getenv("SECRET_KEY")
 
-SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
-SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
-SPOTIFY_REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI')
-
-def get_spotify_auth_url():
-    scopes = "user-read-currently-playing"
-    return (
-        f"https://accounts.spotify.com/authorize"
-        f"?client_id={SPOTIFY_CLIENT_ID}"
-        f"&response_type=code"
-        f"&redirect_uri={SPOTIFY_REDIRECT_URI}"
-        f"&scope={scopes}"
-    )
+CURRENT_ACCESS_TOKEN = None
 
 @app.route('/')
 def index():
@@ -29,58 +14,55 @@ def index():
 
 @app.route('/login')
 def login():
-    return redirect(get_spotify_auth_url())
+    auth_url = "https://accounts.spotify.com/authorize"
+    params = {
+        "client_id": os.getenv("SPOTIFY_CLIENT_ID"),
+        "response_type": "code",
+        "redirect_uri": os.getenv("SPOTIFY_REDIRECT_URI"),
+        "scope": "user-read-currently-playing"
+    }
+    url = f"{auth_url}?{'&'.join([f'{k}={v}' for k,v in params.items()])}"
+    return redirect(url)
 
 @app.route('/callback')
 def callback():
+    global CURRENT_ACCESS_TOKEN
     code = request.args.get('code')
-    response = requests.post(
-        'https://accounts.spotify.com/api/token',
-        data={
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': SPOTIFY_REDIRECT_URI,
-            'client_id': SPOTIFY_CLIENT_ID,
-            'client_secret': SPOTIFY_CLIENT_SECRET
-        }
-    )
+    token_url = 'https://accounts.spotify.com/api/token'
+    payload = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': os.getenv("SPOTIFY_REDIRECT_URI"),
+        'client_id': os.getenv("SPOTIFY_CLIENT_ID"),
+        'client_secret': os.getenv("SPOTIFY_CLIENT_SECRET")
+    }
+    response = requests.post(token_url, data=payload)
     data = response.json()
-    session['access_token'] = data['access_token']
+    CURRENT_ACCESS_TOKEN = data.get('access_token')
     return redirect('/')
 
-@app.route('/current_track')
-def current_track():
-    access_token = session.get('access_token')
-    if not access_token:
-        return jsonify({'error': 'Not logged in'}), 401
+@app.route('/nowplaying')
+def now_playing():
+    global CURRENT_ACCESS_TOKEN
+    if not CURRENT_ACCESS_TOKEN:
+        return jsonify({'error': 'Not streaming yet'}), 403
 
-    headers = {'Authorization': f'Bearer {access_token}'}
+    headers = {'Authorization': f'Bearer {CURRENT_ACCESS_TOKEN}'}
     response = requests.get('https://api.spotify.com/v1/me/player/currently-playing', headers=headers)
-    
+
     if response.status_code != 200:
-        return jsonify({'error': 'Failed to fetch'}), response.status_code
+        return jsonify({'error': 'Playback info not available'}), 404
 
-    data = response.json()
-    if not data or not data.get('item'):
-        return jsonify({'error': 'No track playing'}), 404
-
-    track = {
-        'name': data['item']['name'],
-        'artist': data['item']['artists'][0]['name'],
-        'energy': None,
-        'danceability': None
-    }
-
-    track_id = data['item']['id']
-    audio_features = requests.get(
-        f'https://api.spotify.com/v1/audio-features/{track_id}',
-        headers=headers
-    ).json()
-
-    track['energy'] = audio_features.get('energy')
-    track['danceability'] = audio_features.get('danceability')
-
-    return jsonify(track)
+    song = response.json()
+    return jsonify({
+        'title': song['item']['name'],
+        'artist': song['item']['artists'][0]['name'],
+        'album': song['item']['album']['name'],
+        'cover': song['item']['album']['images'][0]['url'],
+        'progress_ms': song['progress_ms'],
+        'duration_ms': song['item']['duration_ms'],
+        'is_playing': song['is_playing']
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
