@@ -1,19 +1,32 @@
-
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
     overflow: hidden;
-    background: #10061B;
+    background: transparent;
     font-family: 'Inter', sans-serif;
+    color: white;
 }
 
+/* Starfield background */
+canvas#starfield {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Header bar */
 header {
     position: fixed;
     width: 100%;
     top: 0;
     left: 0;
     backdrop-filter: blur(10px);
+    background-color: rgba(16, 6, 27, 0.2); /* Optional subtle tint */
     z-index: 10;
     padding: 10px 20px;
     display: flex;
@@ -21,6 +34,7 @@ header {
     align-items: center;
 }
 
+/* Navigation layout */
 .nav {
     width: 100%;
     display: flex;
@@ -28,11 +42,13 @@ header {
     align-items: center;
 }
 
+/* Logo style */
 .logo {
     color: white;
     font-size: 24px;
 }
 
+/* Login button */
 .login-btn {
     background: linear-gradient(30deg, #c850c0, #ffcc70);
     color: white;
@@ -42,13 +58,9 @@ header {
     font-weight: bold;
 }
 
-canvas#starfield {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: -1;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
-  
+/* Optional: remove border or shadow from containers if needed */
+main, .container, .content {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
