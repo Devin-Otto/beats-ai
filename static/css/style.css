@@ -3,9 +3,10 @@ body, html {
     padding: 0;
     height: 100%;
     overflow: hidden;
-    background: transparent;
+    background: transparent !important;
     font-family: 'Inter', sans-serif;
     color: white;
+    text-align: center;
 }
 
 /* Starfield background */
@@ -69,5 +70,5 @@ main, .container, .content {
     position: relative;
     z-index: 10;
     padding-top: 20px;
-    background: transparent !important; /* <-- Force it to be transparent */
+    background: transparent !important;
 }

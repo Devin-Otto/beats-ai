@@ -1,0 +1,7 @@
+add to playlist button 
+    -picks platform it came from 
+
+dragable UI to move order of queue
+
+A actually working queue lol 
+
